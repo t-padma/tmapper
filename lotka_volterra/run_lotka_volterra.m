@@ -282,35 +282,8 @@ h.MarkerSize = sqrt(nsize) * 3;
 colormap(gca, jet);
 title(sprintf('Shape Graph\n(%d nodes, %d edges)', numnodes(g_simp), numedges(g_simp)));
 
-%% ===== 8. INTERPRETATION GUIDE =====
-fprintf('=== INTERPRETATION GUIDE ===\n\n');
-
-fprintf('What the temporal mapper reveals about Lotka-Volterra dynamics:\n\n');
-
-fprintf('1. PHASE SPACE (top-left):\n');
-fprintf('   - Points colored by their mapper node assignment\n');
-fprintf('   - Similar colors = points grouped in same node = similar dynamical state\n');
-fprintf('   - The limit cycle is partitioned into distinct "phases"\n\n');
-
-fprintf('2. SHAPE GRAPH (bottom-right):\n');
-fprintf('   - Nodes = groups of time points with similar states\n');
-fprintf('   - Edges = transitions between groups\n');
-fprintf('   - For Lotka-Volterra: should show a cyclic structure!\n');
-fprintf('   - Node size = how much time spent in each state\n\n');
-
-fprintf('3. TCM / RECURRENCE PLOT (bottom-middle):\n');
-fprintf('   - Shows shortest path length between all time point pairs\n');
-fprintf('   - Diagonal patterns = periodic behavior\n');
-fprintf('   - Distance from diagonal = how far apart in "dynamical time"\n');
-fprintf('   - For periodic system: should see repeated diagonal bands\n\n');
-
-fprintf('4. GEODESIC DISTANCES (top-right):\n');
-fprintf('   - Shortest paths between nodes on shape graph\n');
-fprintf('   - Captures "dynamical distance" not just state space distance\n');
-fprintf('   - Opposite phases of cycle are maximally distant\n\n');
 
 %% Check different parameter values
-fprintf('\n=== BONUS: Effect of Parameters ===\n\n');
 
 % Show how k and d affect the result
 figure('Name', 'Parameter Effects', 'Position', [100 100 1000 1000]);
