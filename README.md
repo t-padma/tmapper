@@ -38,7 +38,7 @@ With default parameters, the system exhibits **limit cycle oscillations** around
 | `plot_mapper_results.m` | Visualization utility |
 | `plot_shape_graph_animated.m` | Animation of trajectory on shape graph |
 
-## How to navigate the repo?
+**How to navigate the repo?**
 
 1. Open MATLAB and navigate to this folder
 2. Run the main tutorial:
@@ -52,7 +52,7 @@ With default parameters, the system exhibits **limit cycle oscillations** around
 
 ## Understanding Temporal Mapper
 
-### The Key Steps
+### Summary
 
 1. **Simulate/obtain time series data**
    - In our case: prey and predator populations over time
@@ -73,25 +73,6 @@ With default parameters, the system exhibits **limit cycle oscillations** around
    - Graph topology: Reveals the structure of the attractor
 
 
-#### Shape Graph
-- **Nodes** = Groups of time points with similar states
-- **Edges** = Transitions between groups
-- For Lotka-Volterra: Should show a **cyclic structure**!
-
-#### Temporal Connectivity Matrix (TCM)
-- Shows shortest path length between all time point pairs
-- Diagonal patterns = periodic behavior
-- For periodic systems: repeated diagonal bands
-
-#### Geodesic Distances
-- Shortest paths between nodes on shape graph
-- Captures "dynamical distance" not just Euclidean distance
-- Opposite phases of cycle have maximum distance
-
-### Sampling interval (SI)
-- Should capture dynamics adequately
-- ~10-20 samples per oscillation period is good
-- Too sparse: miss dynamics; Too dense: slow computation
 
 ## Comparison with Neural Data
 
