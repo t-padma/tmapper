@@ -1,0 +1,260 @@
+---
+title: "Lotka Volterra Dynamics"
+author: "Padma Tanikella"
+date: "January 5, 2026"
+date-modified: now
+format: 
+  pdf: 
+    toc: false
+    number-sections: true
+    number-depth: 5
+    fig-align: center
+    cap-location: top
+    geometry: 
+      - top=0.7in
+      - left=0.8in
+      - right=0.8in
+      - bottom=0.7in
+    colorlinks: true
+execute: 
+  echo: false
+  warning: false
+---
+
+## The Lotka-Volterra Model
+
+The non-linear ODE model is defined as:
+
+$$
+\begin{aligned}
+\dfrac{\mathrm{d}x}{\mathrm{d}t} &= \alpha x - \beta xy \quad \text{(prey: growth minus predation)} \\[6pt]
+\dfrac{\mathrm{d}y}{\mathrm{d}t} &= \delta xy - \gamma y \quad \text{(predator: growth from eating minus death)}
+\end{aligned}
+$$
+
+
+Where:
+- $x$ or $x(t)$ denotes prey population
+- $y$ or $y(t)$ denotes predator population
+- $\alpha$ represents prey birth rate
+- $\beta$ represents predation rate
+- $\delta$ represents predator birth rate (from consuming prey)
+- $\gamma$ represents predator death rate
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library(deSolve)
+library(ggplot2)
+library(dplyr)
+
+alpha <- 1.0    # prey growth
+beta  <- 0.5    # predation rate
+delta <- 0.5    # predator reproduction per prey eaten
+gamma <- 0.5    # predator death
+
+# interior equilibrium
+x_eq <- gamma / delta   # = 1
+y_eq <- alpha / beta    # = 2
+```
+
+
+**Equilibria**: Find points which satisfy $\dot x = 0$ and $\dot y = 0$ simultaneously.
+
+- From $\dot x = 0$: $x(\alpha - \beta y) = 0 \Rightarrow x = 0 \ \text{or}\ y = \alpha/\beta.$
+- From $\dot y = 0$: $y(\delta x - \gamma) = 0 \Rightarrow y = 0 \ \text{or}\ x = \gamma/\delta.$
+
+Combining these gives two equilibria:
+
+- $(0,0)$: extinction of predator and prey (saddle)
+- $(\gamma/\delta,\alpha/\beta)$: coexistence of predator and prey (center)
+
+The **nullclines** are are curves where one derivative equals zero:
+
+- $x$-nullclines satisfy $\dot x = 0$  i.e. where prey do not change: $x=0$ and $y=\alpha/\beta$
+- $y$-nullclines satisfy $\dot y = 0$ where predators do not change i.e. : $y=0$ and $x=\gamma/\delta$
+
+- The nullclines divide the plane into four regions. The signs of $(\dot x,\dot y)$ in each of the four regions are summerized in the table below.
+
+| Region | Condition        | $(\dot{x}, \dot{y})$ | Arrow Direction |
+| ------ | ---------------- | ------ | --------------- |
+| I      | $x > \gamma/\delta$, $y > \alpha/\beta$ | $(-, +)$ | Up-left         |
+| II     | $x < \gamma/\delta$, $y > \alpha/\beta$ | $(-, -)$ | Down-left       |
+| III    | $x < \gamma/\delta$, $y < \alpha/\beta$ | $(+, -)$ | Down-right      |
+| IV     | $x > \gamma/\delta$, $y < \alpha/\beta$ | $(+, +)$ | Up-right        |
+
+We now define the Lotka–Volterra right-hand side for use with `deSolve::ode`.
+
+```{r}
+#| label: lv-system
+#| echo: true
+#| include: false
+
+lotka_volterra <- function(time, state, parameters) {
+  with(as.list(c(state, parameters)), {
+    dxdt <- alpha * x - beta * x * y
+    dydt <- delta * x * y - gamma * y
+    list(c(dxdt, dydt))
+  })
+}
+```
+
+Note that each point $(x, y)$ on the phase plane represents a state of the system i.e. a specific combination of prey and predator populations at some moment in time.
+
+To construct the phase portrait, we first compute the vector field at each point $(x,y)$, i.e. we compute $(\dot x, \dot y)$, and draw a small arrow in that direction.
+
+```{r}
+#| label: vector-field
+#| include: false
+#| fig.width: 5
+#| fig.height: 5
+
+# grid for vector field
+x_grid <- seq(0.01, 15, by = 0.5)
+y_grid <- seq(0.01, 15, by = 0.5)
+grid <- expand.grid(x = x_grid, y = y_grid)
+
+# compute vector field at each point of grid
+grid <- grid |>
+  mutate(
+    dxdt = alpha * x - beta * x * y,
+    dydt = delta * x * y - gamma * y,
+    mag = sqrt(dxdt^2 + dydt^2), # magnitude of velocity vector
+    # normalize [dx/dt, dy/dt]
+    dxdt_n = dxdt / (mag + 1e-6), 
+    dydt_n = dydt / (mag + 1e-6)
+  )
+
+ggplot(grid, aes(x, y)) +
+  geom_segment(aes(xend = x + 0.3*dxdt_n,
+                   yend = y + 0.3*dydt_n),
+               arrow = arrow(length = unit(1.5, "mm")),
+               alpha = 0.6) +
+  coord_fixed() +
+  labs(title = "Vector Field of Lotka–Volterra System",
+       x = "Prey (x)", y = "Predator (y)")
+```
+
+Overlay the analytically derived nullclines and the equilibrium points on top of the vector field.
+
+```{r}
+#| label: field-nullclines-equilibria
+#| echo: false
+#| fig.width: 6
+#| fig.height: 6
+
+ggplot(grid, aes(x, y)) +
+  # vector field
+  geom_segment(aes(xend = x + 0.3*dxdt_n,
+                   yend = y + 0.3*dydt_n),
+               arrow = arrow(length = unit(1.5, "mm")),
+               alpha = 0.4, color = "gray30") +
+  # nullclines
+  geom_vline(xintercept = x_eq, linetype = "dashed",
+             color = "red", size = 0.8) +
+  geom_hline(yintercept = y_eq, linetype = "dashed",
+             color = "blue", size = 0.8) +
+  # equilibria
+  geom_point(aes(x = 0, y = 0), shape = 4, size = 4, stroke = 1.2) +
+  geom_point(aes(x = x_eq, y = y_eq), shape = 1, size = 4, stroke = 1.2,
+             color = "darkred") +
+  coord_fixed(xlim = c(0, 15), ylim = c(0, 15)) +
+  labs(title = "Vector Field with Nullclines and Equilibria",
+       x = "Prey (x)", y = "Predator (y)") +
+  annotate("text", x = x_eq + 0.2, y = y_eq + 0.2,
+           label = sprintf("(%.1f, %.1f)", x_eq, y_eq),
+           color = "darkred", size = 3)
+```
+
+
+
+A **trajectory** (orbit) is the path traced by $(x(t),y(t))$ for a given initial condition. To visualize these orbits, we numerically integrate the system from several starting points.
+
+The closed orbits around the center represent **periodic predator–prey cycles**, with amplitudes depending on the initial condition.
+
+```{r}
+#| label: orbits
+#| echo: false
+#| fig.width: 6
+#| fig.height: 6
+
+times <- seq(0, 50, by = 0.05)
+
+inits <- list(
+  c(x = 0.5, y = 1.5),
+  c(x = 1.5, y = 1.0),
+  c(x = 0.5, y = 2.5),
+  c(x = 3.0, y = 1.0),
+  c(x = 5.0, y = 1.0),
+  c(x = 8.0, y = 1.0)
+)
+
+sol_list <- lapply(seq_along(inits), function(i) {
+  out <- ode(
+    y = inits[[i]],
+    times = times,
+    func = lotka_volterra,
+    parms = c(alpha = alpha, beta = beta,
+              delta = delta, gamma = gamma)
+  )
+  as.data.frame(out) |>
+    mutate(traj = factor(i))
+})
+
+orbits <- bind_rows(sol_list)
+
+ggplot() +
+  # vector field (faint, for context)
+  geom_segment(data = grid,
+               aes(x = x, y = y,
+                   xend = x + 0.25*dxdt_n,
+                   yend = y + 0.25*dydt_n),
+               arrow = arrow(length = unit(1.2, "mm")),
+               alpha = 0.25, color = "gray30") +
+  # nullclines
+  geom_vline(xintercept = x_eq, linetype = "dashed",
+             color = "red", size = 0.8) +
+  geom_hline(yintercept = y_eq, linetype = "dashed",
+             color = "blue", size = 0.8) +
+  # orbits
+  geom_path(data = orbits,
+            aes(x = x, y = y, color = traj),
+            size = 1) +
+  # equilibria
+  geom_point(aes(x = x_eq, y = y_eq),
+             shape = 1, size = 4, stroke = 1.2,
+             color = "darkred") +
+  coord_fixed(xlim = c(0, 15), ylim = c(0, 15)) +
+  labs(title = "Lotka–Volterra Phase Portrait with Orbits",
+       x = "Prey (x)", y = "Predator (y)",
+       color = "Trajectory\n(initial condition)") +
+  theme(legend.position = "right")
+```
+
+| Trajectory Type                | Has Loop? | Behavior                                           |
+| --------------------------- | --------- | -------------------------------------------------- |
+| Interior ($x > 0, y > 0$)        | Yes       | Closed periodic orbits around interior equilibrium |
+| Positive x-axis ($y = 0, x > 0$) | No        | Moves rightward to $+ \infty$                              |
+| Positive y-axis ($x = 0, y > 0$) | No        | Moves downward to origin                           |
+| Origin                         | No        | Fixed point (equilibrium)                          |
+
+### RK4 big picture
+
+Solving a differential equation numerically with RK4 involves the following steps:
+
+- Take small time steps of size $h$.
+
+- At each step, evaluate the slope (derivative) at four strategic points.
+
+- Combine the four slopes using weighted averaging.
+
+- Update the solution to the next time point.
+
+- Repeat until you reach the final time.
+
+For more details [refer to these lecture notes](https://www.me.psu.edu/cimbala/Learning/General/Runge_Kutta_Technique.pdf) by Prof. Cimbala. (Last visited on 5 Jan 2026).
+
+
+

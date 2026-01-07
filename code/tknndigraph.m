@@ -22,31 +22,50 @@ link. parameter: timeExcludeSpace
 %}
 p = inputParser;
 p.addParameter('reciprocal',true)% spatially reciprocal
-p.addParameter('timeExcludeSpace',true)% whether temporal links are allow to be spatial links
+p.addParameter('timeExcludeSpace',true)% whether temporal links are allowed to be spatial links
 p.parse(varargin{:})
 par = p.Results;
 
 % -- check input and obtain distance matrix D
 [nr,nc]=size(XorD);
 if nr~=nc || any(any(XorD~=XorD'))
-    D = pdist2(XorD,XorD);
+    D = pdist2(XorD,XorD); % pairwise L2 dist
 else
     D = XorD;
 end
 Nn = length(D); % number of nodes
 
-D(logical(eye(Nn))) = Inf; % exclude self-loops
+D(logical(eye(Nn))) = Inf; % exclude self-loops i.e. ensures a point can't be its own neighbor
 
 % -- find indices for temporal links D_{i(t),i(t+1)}
-t_wafter = circshift(tidx,-1,1) - 1 == tidx; % for which time points there exist a time point after
+% t_wafter(i) = true if i has a temporal neighbor i.e. next time point exists
+t_wafter = circshift(tidx,-1,1) - 1 == tidx; 
+% t_after_idx(i, i+1) = 1 if there is edge from time t to time t+1
 t_after_idx = circshift(diag(t_wafter),1,2);
+% If timeExcludeSpace=true then set distance b/w consecutive time points to 0.
 if par.timeExcludeSpace
     D(t_after_idx) = 0;
 end
 
 % -- compute adjacency matrix
-A = zeros(Nn,Nn);
-[~,Ic]=sort(D,2);
+% Example:                         
+% D =   [Inf  5   2   8]         Ic =      [3  2  4  1]  ← for point 1: nearest is 3, then 2
+%       [5  Inf  3   1]      →             [4  3  1  2]  ← for point 2: nearest is 4, then 3
+%       [2   3  Inf  6]                    [1  2  4  3]  ← for point 3: nearest is 1, then 2
+%       [8   1   6  Inf]                   [2  3  1  4]  ← for point 4: nearest is 2, then 3
+%
+
+A = zeros(Nn,Nn); % initialize adj matrix
+% sort rows in ascending order; only store indices Ic of sorted values
+[~,Ic]=sort(D,2); 
+
+% A is computed. Add edge to k nearest neighbors (spatial)
+%      1   2   3   4
+% 1 [  0   1   1   0 ]  ← point 1 connects to 2, 3
+% 2 [  0   0   1   1 ]  ← point 2 connects to 3, 4
+% 3 [  1   1   0   0 ]  ← point 3 connects to 1, 2
+% 4 [  0   1   1   0 ]  ← point 4 connects to 2, 3
+%
 I = sub2ind([Nn Nn], repmat((1:Nn)',1,k), Ic(:,1:k));
 A(I(:))=1;
 
@@ -59,9 +78,9 @@ end
 
 % -- enforce symmetry of spatial links
 if par.reciprocal
-    A_space = A_space & A_space';
+    A_space = A_space & A_space'; % edge exists if they are mutual nbrs
 else
-    A_space = A_space | A_space';
+    A_space = A_space | A_space'; % at least one is a nbr of the other
 end
 
 % -- (re-)incoporate temporal links
