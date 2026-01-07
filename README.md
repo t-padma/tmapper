@@ -9,13 +9,13 @@ Lotka-Volterra has simple dynamics (i.e. two state variables), a clear periodic 
 
 The non-linear ODE model is defined as:
 
-\begin{align}
+$$
+\frac{\mathrm{d}x}{\mathrm{d}t} = \alpha x - \beta xy \quad \text{(prey: growth minus predation)}
+$$
 
-\dfrac{\mathrm{d}x}{\mathrm{d}t} = \alpha x - \beta xy \quad \text{(prey: growth minus predation)}
-
-\dfrac{\mathrm{d}y}{\mathrm{d}t} = \delta xy - \gamma y \quad \text{(predator: growth from eating minus death)}
-
-\end{align}
+$$
+\frac{\mathrm{d}y}{\mathrm{d}t} = \delta xy - \gamma y \quad \text{(predator: growth from eating minus death)}
+$$
 
 
 Where:
