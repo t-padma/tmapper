@@ -31,11 +31,10 @@ lv.gamma = 1;     % predator death rate 1.5
 lv.T = 200;       % simulation time 
 lv.dt = 0.01;    % integration time step
 
-% Initial conditions (away from equilibrium to see oscillations)
+% Initial condition
 X0 = [10; 5];
 
-% Solve the system
-fprintf('Solve ODE using RK4 given the initial condition: prey=%.1f, predator=%.1f\n', X0(1), X0(2));
+% Solve the system using RK4 given the initial conditions
 lv = lv.solve(X0);
 
 % Display equilibrium point
@@ -78,7 +77,7 @@ exportgraphics(gcf, 'images/lv_dynamics.pdf', 'ContentType', 'vector');
 % Subsample interval (like sampling interval in neural recordings)
 % if SI = 0.5 sec (i.e. desired sampling interval) while original time step (lv.dt) = 0.01
 % Nds = round(0.5/0.01) = 50 i.e. take every 50 th point
-% spidx = 
+% spidx = indices of subsampled points
 SI = 0.5;  % seconds
 Nds = round(SI / lv.dt); % num. of downsample steps
 spidx = 1:Nds:lv.Nt;    % subsample indices
