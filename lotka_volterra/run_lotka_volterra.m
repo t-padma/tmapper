@@ -229,7 +229,7 @@ fprintf('- Periodic structure appears as repeated patterns\n\n');
 % Create comprehensive visualization
 figure('Name', 'Temporal Mapper Results', 'Position', [50 50 1400 800]);
 
-% 7a. Phase space with node coloring
+% Phase space with node coloring
 subplot(2,3,1);
 % Assign each time point to its node
 node_assignment = zeros(N_t, 1);
@@ -242,7 +242,7 @@ title(sprintf('Phase Space (colored by mapper node)\n%d nodes', length(members))
 colorbar; colormap(gca, jet);
 grid on;
 
-% 7b. Time series colored by node
+% Time series colored by node
 subplot(2,3,2);
 scatter(t_sub, x_sub(:,1), 30, node_assignment, 'filled');
 xlabel('Time'); ylabel('Prey Population');
@@ -250,7 +250,7 @@ title('Prey Time Series (colored by node)');
 colorbar; colormap(gca, jet);
 grid on;
 
-% 7c. Geodesic distance matrix
+% Geodesic distance matrix
 subplot(2,3,3);
 imagesc(geod);
 colorbar;
@@ -258,14 +258,14 @@ xlabel('Node'); ylabel('Node');
 title('Geodesic Distance Matrix');
 axis square;
 
-% 7d. Node sizes (histogram)
+%  Node sizes (histogram)
 subplot(2,3,4);
 bar(nsize);
 xlabel('Node Index'); ylabel('Number of Time Points');
 title('Node Sizes (Points per Node)');
 grid on;
 
-% 7e. Temporal Connectivity Matrix (Recurrence Plot)
+%  Temporal Connectivity Matrix (Recurrence Plot)
 subplot(2,3,5);
 imagesc(t_sub, t_sub, tcm_n);
 colorbar;
@@ -273,7 +273,7 @@ xlabel('Time'); ylabel('Time');
 title('Temporal Connectivity Matrix (Recurrence Plot)');
 axis square;
 
-% 7f. Shape graph visualization
+%  Shape graph visualization
 subplot(2,3,6);
 h = plot(g_simp, 'Layout', 'force');
 h.NodeCData = 1:numnodes(g_simp);
